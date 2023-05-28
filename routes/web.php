@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ChatsController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Laravel\Cashier\Cashier;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +19,7 @@ use Laravel\Cashier\Cashier;
 */
 
 Route::get('/', function () {
-    return Inertia::render('Home');
+    return Inertia::render('Home', ['users' => App\Models\User::all()]);
 })->name('home');
 
 Route::get('/dashboard', function () {
@@ -27,13 +27,16 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/users/{username}', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/profile/avatar', [ProfileController::class, 'avatar_update'])->name('profile.avatar.update');
+
+    Route::get('/chats', ChatsController::class)->name('chats');
+    Route::get('/chats/{chat_uuid}', ChatController::class)->name('chat');
+    Route::post('/chats/{chat_uuid}', [MessageController::class, 'store'])->name('message.store');
 });
 
 require __DIR__ . '/auth.php';
-
-Route::get('/charge-checkout', function (Request $request) {
-    return $request->user()->checkoutCharge(1200, 'T-Shirt', 5);
-});
